@@ -4,6 +4,7 @@
 
 import React from "react";
 import {
+  Image,
   StyleSheet,
   View
 } from "react-native";
@@ -19,19 +20,19 @@ import Animated, {
 // @ts-ignore
 import kitten from "../assets/kitten.jpg";
 
+const kittenAssetSource = Image.resolveAssetSource(kitten);
+
 const App: React.VFC = () => {
-  const translationX = useSharedValue(0);
-  const translationY = useSharedValue(0);
-  const initialTranslationX = useSharedValue(0);
-  const initialTranslationY = useSharedValue(0);
-  
   const savedScale = useSharedValue(1);
   const scale = useSharedValue(1);
   
+  const start = useSharedValue(0);
+  const top = useSharedValue(0);
+  
   const imageStyle = useAnimatedStyle(() => ({
     position: "absolute",
-    start: translationX.value,
-    top: translationY.value,
+    start: start.value,
+    top: top.value,
     transform: [
       {
         scale: scale.value
@@ -45,21 +46,28 @@ const App: React.VFC = () => {
         savedScale.value = 1;
         scale.value = 1;
         
-        initialTranslationX.value = 0;
-        initialTranslationY.value = 0;
-        translationX.value = 0;
-        translationY.value = 0;
+        start.value = 0;
+        top.value = 0;
       }),
     Gesture.Simultaneous(
       Gesture.Pan()
         .maxPointers(1)
-        .onEnd(() => {
-          initialTranslationX.value = translationX.value;
-          initialTranslationY.value = translationY.value;
-        })
-        .onUpdate(e => {
-          translationX.value = (initialTranslationX.value + e.translationX);
-          translationY.value = (initialTranslationY.value + e.translationY);
+        .onChange(e => {
+          "worklet"
+          const newStart = start.value + e.changeX;
+          const newTop = top.value + e.changeY;
+          
+          // = The coordinates of the top-left corner are dependent on the scale = //
+          const thresholdX = 10 + (kittenAssetSource.width * (scale.value - 1) / 2);
+          const thresholdY = 10 + (kittenAssetSource.height * (scale.value - 1) / 2);
+          
+          if (newStart >= thresholdX) {
+            start.value = newStart;
+          }
+          
+          if (newTop >= thresholdY) {
+            top.value = newTop;
+          }
         }),
       Gesture.Pinch()
         .onEnd(() => {
