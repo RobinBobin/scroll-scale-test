@@ -20,14 +20,12 @@ import Animated, {
 // @ts-ignore
 import kitten from "../assets/kitten.jpg";
 
-const kittenAssetSource = Image.resolveAssetSource(kitten);
-
 const App: React.VFC = () => {
   const savedScale = useSharedValue(1);
   const scale = useSharedValue(1);
   
-  const start = useSharedValue(0);
-  const top = useSharedValue(0);
+  const start = useSharedValue(THRESHOLD_X);
+  const top = useSharedValue(THRESHOLD_Y);
   
   const imageStyle = useAnimatedStyle(() => ({
     position: "absolute",
@@ -46,8 +44,8 @@ const App: React.VFC = () => {
         savedScale.value = 1;
         scale.value = 1;
         
-        start.value = 0;
-        top.value = 0;
+        start.value = THRESHOLD_X;
+        top.value = THRESHOLD_Y;
       }),
     Gesture.Simultaneous(
       Gesture.Pan()
@@ -58,8 +56,8 @@ const App: React.VFC = () => {
           const newTop = top.value + e.changeY;
           
           // = The coordinates of the top-left corner are dependent on the scale = //
-          const thresholdX = 10 + (kittenAssetSource.width * (scale.value - 1) / 2);
-          const thresholdY = 10 + (kittenAssetSource.height * (scale.value - 1) / 2);
+          const thresholdX = THRESHOLD_X + (kittenAssetSource.width * (scale.value - 1) / 2);
+          const thresholdY = THRESHOLD_Y + (kittenAssetSource.height * (scale.value - 1) / 2);
           
           if (newStart >= thresholdX) {
             start.value = newStart;
@@ -75,8 +73,6 @@ const App: React.VFC = () => {
         })
         .onUpdate(e => {
           scale.value = savedScale.value * e.scale;
-          
-          console.log(scale.value);
         })
     )
   );
@@ -112,3 +108,8 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
+const kittenAssetSource = Image.resolveAssetSource(kitten);
+
+const THRESHOLD_X = 5;
+const THRESHOLD_Y = 10;
