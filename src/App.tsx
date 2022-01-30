@@ -41,16 +41,25 @@ const App: React.VFC = () => {
     ]
   }), []);
   
-  const gesture = Gesture.Pan()
-    .maxPointers(1)
-    .onEnd(() => {
-      initialTranslationX.value = translationX.value;
-      initialTranslationY.value = translationY.value;
-    })
-    .onUpdate(e => {
-      translationX.value = initialTranslationX.value + e.translationX;
-      translationY.value = initialTranslationY.value + e.translationY;
-    });
+  const gesture = Gesture.Race(
+    Gesture.Pan()
+      .maxPointers(1)
+      .onEnd(() => {
+        initialTranslationX.value = translationX.value;
+        initialTranslationY.value = translationY.value;
+      })
+      .onUpdate(e => {
+        translationX.value = initialTranslationX.value + e.translationX;
+        translationY.value = initialTranslationY.value + e.translationY;
+      }),
+    Gesture.Tap()
+      .onStart(() => {
+        initialTranslationX.value = 0;
+        initialTranslationY.value = 0;
+        translationX.value = 0;
+        translationY.value = 0;
+      })
+  );
   
   return (
     <GestureHandlerRootView
