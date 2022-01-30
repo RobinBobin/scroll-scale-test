@@ -25,40 +25,52 @@ const App: React.VFC = () => {
   const initialTranslationX = useSharedValue(0);
   const initialTranslationY = useSharedValue(0);
   
+  const savedScale = useSharedValue(1);
   const scale = useSharedValue(1);
   
   const imageStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    start: translationX.value,
+    top: translationY.value,
     transform: [
       {
         scale: scale.value
-      },
-      {
-        translateX: translationX.value
-      },
-      {
-        translateY: translationY.value
       }
     ]
   }), []);
   
   const gesture = Gesture.Race(
-    Gesture.Pan()
-      .maxPointers(1)
-      .onEnd(() => {
-        initialTranslationX.value = translationX.value;
-        initialTranslationY.value = translationY.value;
-      })
-      .onUpdate(e => {
-        translationX.value = initialTranslationX.value + e.translationX;
-        translationY.value = initialTranslationY.value + e.translationY;
-      }),
     Gesture.Tap()
       .onStart(() => {
+        savedScale.value = 1;
+        scale.value = 1;
+        
         initialTranslationX.value = 0;
         initialTranslationY.value = 0;
         translationX.value = 0;
         translationY.value = 0;
-      })
+      }),
+    Gesture.Simultaneous(
+      Gesture.Pan()
+        .maxPointers(1)
+        .onEnd(() => {
+          initialTranslationX.value = translationX.value;
+          initialTranslationY.value = translationY.value;
+        })
+        .onUpdate(e => {
+          translationX.value = (initialTranslationX.value + e.translationX);
+          translationY.value = (initialTranslationY.value + e.translationY);
+        }),
+      Gesture.Pinch()
+        .onEnd(() => {
+          savedScale.value = scale.value;
+        })
+        .onUpdate(e => {
+          scale.value = savedScale.value * e.scale;
+          
+          console.log(scale.value);
+        })
+    )
   );
   
   return (
@@ -83,10 +95,8 @@ const App: React.VFC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
     backgroundColor: "cyan",
-    flex: 1,
-    justifyContent: "center"
+    flex: 1
   },
   gestureHandlerRootView: {
     flex: 1
